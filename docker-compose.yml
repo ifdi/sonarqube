@@ -1,14 +1,15 @@
-version "3"
+version: "3"
 
 services:
     sonarqube:
-        image: sonarqube:8.9.0-community
+        image: sonarqube:9.0.0-community
+        container_name: sonarqube
         depends_on:
             - db
         ports:
-            "9000:9000"
-        network:
-            - sonarnet
+            - 9000:9000
+        networks:
+            - mynetwork
         environment:
             - sonar.jdbc.url=jdbc:postgresql://db:5432/sonar
             - sonar.jdbc.username=sonar
@@ -21,18 +22,30 @@ services:
             - sonarqube_temp:/opt/sonarqube/temp
 
     db:
-        image: posgres:11.12
+        image: postgres:13.3
+        container_name: sonar-postgres
         networks:
-            - sonarnet
+            - mynetwork
         environment:
             - POSTGRES_USER=sonar
             - POSTGRES_PASSWORD=sonar
         volumes:
             - postgresql:/var/lib/postgresql
             - postgresql_data:/var/lib/postresql/data
+    
+    jenkins:
+        image: jenkins/jenkins:2.303-jdk11
+        container_name: jenkins
+        ports:
+            - 8080:8080
+        networks: 
+            - mynetwork
+        volumes:
+            - jenkins:/var/lib/jenkins_home
+            - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
-    sonarnet:
+    mynetwork:
 
 volumes:
     sonarqube_conf:
@@ -42,3 +55,4 @@ volumes:
     sonarqube_temp:
     postgresql:
     postgresql_data:
+    jenkins:
